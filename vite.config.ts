@@ -44,7 +44,7 @@ export default defineConfig({
           runtimeCaching: [
             {
               urlPattern: ({ request, url }) =>
-                (request.mode === "navigate" || url.pathname === base) && !url.pathname.startsWith("/~oauth"),
+                (request.mode === "navigate" || url.pathname.endsWith("/")) && !url.pathname.startsWith("/~oauth"),
               handler: "NetworkFirst",
               options: { cacheName: "cubelab-pages", networkTimeoutSeconds: 3 },
             },
