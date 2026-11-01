@@ -20,8 +20,6 @@ export default defineConfig({
     ? {
         nitro: false as const,
         tanstackStart: {
-          // Full page for "/" (no flash, no hydration mismatch) plus an app shell for every other path.
-          prerender: { enabled: true, crawlLinks: false },
           spa: { enabled: true, prerender: { outputPath: "/_shell", crawlLinks: false } },
         },
       }
