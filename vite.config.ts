@@ -11,8 +11,8 @@ import { workboxOptions } from "./pwa-workbox.mjs";
 // Static export for any plain file host (GitHub Pages, Netlify, Vercel, Cloudflare Pages,
 // Apache, nginx...). Enabled with STATIC_EXPORT=1 (see `npm run build:static`).
 // STATIC_BASE is the sub-folder the site lives in, e.g. "/my-repo/" on GitHub Pages.
-const staticExport = process.env.STATIC_EXPORT === "1";
-const rawBase = process.env.STATIC_BASE || "/";
+const staticExport = process.env["STATIC_EXPORT"] === "1";
+const rawBase = process.env["STATIC_BASE"] || "/";
 const base = staticExport ? `/${rawBase.replace(/^\/+|\/+$/g, "")}/`.replace(/^\/\/$/, "/") : "/";
 
 export default defineConfig({
