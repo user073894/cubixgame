@@ -8,6 +8,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:static": "STATIC_EXPORT=1 vite build && node scripts/static-export.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",

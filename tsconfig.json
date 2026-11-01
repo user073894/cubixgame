@@ -3,6 +3,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
+    "pwa-workbox.d.mts",
     "vitest.config.ts",
     "eslint.config.js"
   ],

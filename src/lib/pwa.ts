@@ -39,7 +39,8 @@ export async function registerOffline(onState: (s: OfflineState) => void) {
   }
   try {
     onState("installing");
-    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    const base = import.meta.env.BASE_URL;
+    await navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) {
       await new Promise<void>((res) => {
@@ -50,7 +51,7 @@ export async function registerOffline(onState: (s: OfflineState) => void) {
     // Warm the page cache so the app shell opens offline.
     // Warm caches: the page itself plus every same-origin file already loaded
     // before the service worker took control (JS chunks, worker, CSS, fonts, icons).
-    const urls = new Set<string>(["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/favicon.png"]);
+    const urls = new Set<string>([base, ...["manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "favicon.png"].map((f) => base + f)]);
     for (const e of performance.getEntriesByType("resource")) {
       const u = new URL(e.name);
       if (u.origin === location.origin) urls.add(u.pathname);

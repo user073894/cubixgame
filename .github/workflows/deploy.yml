@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,24 +28,34 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build project
+      - name: Find site folder
+        id: base
+        # user.github.io repos (or a custom domain via CNAME) live at "/", others at "/<repo>/".
         run: |
-          sed -i 's/"yes"/"es"/g' vite.config.ts || true
-          npm run build
-          cp .output/public/_shell.html .output/public/index.html || true
-          cp .output/public/index.html .output/public/404.html || true
-          sed -i 's|src="/|src="./|g' .output/public/index.html || true
-          sed -i 's|href="/|href="./|g' .output/public/index.html || true
+          REPO="${GITHUB_REPOSITORY#*/}"
+          if [ -f public/CNAME ] || [[ "$REPO" == *.github.io ]]; then
+            echo "path=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=/$REPO/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build static site
+        run: npm run build:static
+        env:
+          STATIC_BASE: ${{ steps.base.outputs.path }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './.output/public'
+          path: ./static
 
       - name: Deploy to GitHub Pages
         id: deployment
