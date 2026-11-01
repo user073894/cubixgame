@@ -30,6 +30,7 @@ export default defineConfig({
       VitePWA({
         strategies: "generateSW",
         filename: "sw.js",
+        outDir: "dist/client",
         registerType: "autoUpdate",
         injectRegister: null,
         manifest: false,
