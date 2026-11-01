@@ -16,3 +16,4 @@
 - [x] Set rigid views to top/front two-face angles, including toggle and recenter.
 - [x] Repair confirmed glitches and verify Records and cube interaction on desktop/mobile.
 - [x] Make the app deploy to GitHub Pages and any static host (no 404 / missing index.html).
+- [x] Keep the cube animation caught up at high turns-per-second.
