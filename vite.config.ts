@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
+import { workboxOptions } from "./pwa-workbox.mjs";
 
 // Static export for any plain file host (GitHub Pages, Netlify, Vercel, Cloudflare Pages,
 // Apache, nginx...). Enabled with STATIC_EXPORT=1 (see `npm run build:static`).
@@ -35,33 +36,7 @@ export default defineConfig({
         injectRegister: null,
         manifest: false,
         devOptions: { enabled: false },
-        workbox: {
-          globPatterns: ["**/*.{js,css,png,svg,ico,woff,woff2,webmanifest}"],
-          navigateFallback: null,
-          clientsClaim: true,
-          skipWaiting: true,
-          cleanupOutdatedCaches: true,
-          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
-          runtimeCaching: [
-            {
-              urlPattern: ({ request, url }) =>
-                (request.mode === "navigate" || url.pathname.endsWith("/")) && !url.pathname.startsWith("/~oauth"),
-              handler: "NetworkFirst",
-              options: { cacheName: "cubelab-pages", networkTimeoutSeconds: 3 },
-            },
-            {
-              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.includes("/assets/"),
-              handler: "CacheFirst",
-              options: { cacheName: "cubelab-assets" },
-            },
-            {
-              urlPattern: ({ url, sameOrigin }) =>
-                sameOrigin && /\.(png|ico|svg|webmanifest|woff2?)$/.test(url.pathname),
-              handler: "StaleWhileRevalidate",
-              options: { cacheName: "cubelab-static" },
-            },
-          ],
-        },
+        workbox: workboxOptions,
       }),
     ],
   },
