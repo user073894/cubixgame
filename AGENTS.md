@@ -20,3 +20,5 @@
 - Cube appearance reads semantic cube palette tokens from global CSS; layer animations carry frame time through the queue without dropping turns, and the inner core stays inside the center cubie to avoid intersecting moving layers.
 - Camera snapping and keyboard face mapping use the 24 proper cube orientations to prevent duplicate axes; rigid snapping uses its own two-face base view and is gated by laptop width and fine hover-capable pointer, never touch-only tablets.
 - Records graph data is derived from saved solves through the shared penalty/average functions; never store a second results series that could diverge from history edits.
+- Static hosting (GitHub Pages, Netlify, Vercel, any file host) uses `npm run build:static` (STATIC_EXPORT=1 SPA shell + scripts/static-export.mjs → ./static); asset/icon/service-worker paths must use import.meta.env.BASE_URL so sub-folder hosting works. Lovable publishing keeps the default build.
+- Service-worker settings live in pwa-workbox.mjs, shared by vite.config.ts and the static export, so both builds cache the same files.
