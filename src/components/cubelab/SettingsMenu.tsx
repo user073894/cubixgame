@@ -11,7 +11,7 @@ import type { OfflineState } from "@/lib/pwa";
 import { OfflineStatus } from "./panels";
 import { useEffect, useState, type ReactNode } from "react";
 
-export const APP_VERSION = "0.3.26";
+export const APP_VERSION = "0.4.26";
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
