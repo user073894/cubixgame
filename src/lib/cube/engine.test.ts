@@ -29,13 +29,4 @@ describe("cube gesture integrity", () => {
     expect(resolveFaceGesture).not.toHaveBeenCalled();
     expect(onUserMove).not.toHaveBeenCalled();
   });
-  it("finishes a running turn within 35 ms when another turn is typed", () => {
-    const anim = { elapsed: 0.02, duration: 0.13, from: 0 };
-    const hurry = (CubeEngine.prototype as unknown as { hurry: (a: typeof anim) => void }).hurry;
-    hurry.call({}, anim);
-    expect(anim.duration).toBe(0.035);
-    expect(anim.elapsed).toBe(0);
-    expect(anim.from).toBeGreaterThan(0);
-    expect(anim.from).toBeLessThan(1);
-  });
 });

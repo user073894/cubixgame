@@ -27,10 +27,6 @@ const STICKER_TOKENS = {
 };
 
 const DEFAULT_VIEW = FREE_VIEW;
-/** Turns waiting beyond this are seated instantly so the cube never trails fast typing. */
-const MAX_ANIMATED_BACKLOG = 3;
-/** When another turn arrives, the current one finishes within this many seconds. */
-const HURRY_SECONDS = 0.035;
 
 interface QueueItem {
   move: Move;
@@ -43,8 +39,6 @@ interface Anim {
   target: number;
   elapsed: number;
   duration: number;
-  /** Fraction of the turn already shown when a faster finish was requested. */
-  from: number;
   members: THREE.Object3D[];
   done: () => void;
 }
@@ -196,7 +190,6 @@ export class CubeEngine {
     if (!moves.length) return Promise.resolve();
     // A stored hit point is stale even if the queued turn completes before pointermove.
     if (this.gesture?.kind === "face") this.gesture = { kind: "spent" };
-    if (this.anim) this.hurry(this.anim);
     const ps = moves.map((move) => new Promise<void>((resolve) => this.queue.push({ move, resolve })));
     this.cb.onQueueChange?.(this.pendingCount());
     return Promise.all(ps).then(() => undefined);
@@ -389,16 +382,6 @@ export class CubeEngine {
     return move;
   }
 
-  /** Finish the running turn quickly from where it is, without jumping back or bouncing. */
-  private hurry(a: Anim) {
-    const left = a.duration - a.elapsed;
-    if (left <= HURRY_SECONDS) return;
-    const t = Math.min(1, a.elapsed / a.duration);
-    a.from = a.from + (1 - a.from) * (a.from > 0 ? 1 - (1 - t) * (1 - t) : t * t * (3 - 2 * t));
-    a.elapsed = 0;
-    a.duration = HURRY_SECONDS;
-  }
-
   // ---------- loop ----------
   private startNext() {
     const item = this.queue.shift();
@@ -413,9 +396,9 @@ export class CubeEngine {
     const speed = this.cb.getSettings().speed;
     // Speed up when moves pile up so fast typing (high TPS) never lags behind.
     const backlog = this.queue.length;
-    const base = (Math.abs(quarters) === 2 ? 0.2 : 0.13) / speed;
-    const duration = backlog > 0 ? Math.max(0.02, Math.min(base, HURRY_SECONDS * 1.5) / (1 + backlog * 0.5)) : base;
-    this.anim = { pivot, axis: axisVec, target: (quarters * Math.PI) / 2, elapsed: 0, duration, from: 0, members, done: item.resolve };
+    const base = (Math.abs(quarters) === 2 ? 0.22 : 0.14) / speed;
+    const duration = Math.max(0.018, base / (1 + backlog * 0.3));
+    this.anim = { pivot, axis: axisVec, target: (quarters * Math.PI) / 2, elapsed: 0, duration, members, done: item.resolve };
   }
 
   private finishAnim() {
@@ -448,12 +431,6 @@ export class CubeEngine {
       this.recenterT = 0;
     }
     const dt = Math.min((this.clock.update(), this.clock.getDelta()), 0.05);
-    // A long burst of turns is seated immediately; only the last few are animated.
-    while (this.queue.length > MAX_ANIMATED_BACKLOG) {
-      if (!this.anim) this.startNext();
-      this.finishAnim();
-      this.dirty = true;
-    }
     let remaining = dt;
     let guard = 0;
     while ((this.anim || this.queue.length) && remaining > 0 && guard++ < 50) {
@@ -465,9 +442,8 @@ export class CubeEngine {
       remaining -= used;
       const t = Math.min(1, a.elapsed / a.duration);
       // A finger turn accelerates then seats cleanly, without bounce or overshoot.
-      // A hurried turn continues at speed and decelerates into place.
-      const ease = a.from > 0 ? 1 - (1 - t) * (1 - t) : t * t * (3 - 2 * t);
-      a.pivot.quaternion.setFromAxisAngle(a.axis, a.target * (a.from + (1 - a.from) * ease));
+      const ease = t * t * (3 - 2 * t);
+      a.pivot.quaternion.setFromAxisAngle(a.axis, a.target * ease);
       this.dirty = true;
       if (t >= 1) {
         this.finishAnim();
