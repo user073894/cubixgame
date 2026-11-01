@@ -20,7 +20,8 @@ cpSync(src, out, { recursive: true });
 rmSync(join(out, "_shell.html"));
 
 // Every host looks for index.html; 404.html makes deep links / refreshes open the app too.
-copyFileSync(shell, join(out, "index.html"));
+const page = join(src, "index.html");
+if (!existsSync(page)) copyFileSync(shell, join(out, "index.html"));
 copyFileSync(shell, join(out, "404.html"));
 // GitHub Pages: skip Jekyll so files starting with "_" are served.
 writeFileSync(join(out, ".nojekyll"), "");
