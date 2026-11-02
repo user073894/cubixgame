@@ -17,6 +17,7 @@ import { CubeState } from "@/lib/cube/state";
 import type { Move } from "@/lib/cube/moves";
 import { playClick, vibrate } from "@/lib/feedback";
 import { registerOffline, type OfflineState } from "@/lib/pwa";
+import { markBooted, recoverFromMissingFiles } from "@/lib/boot-recovery";
 
 export function CubeLabApp() {
   const [splash, setSplash] = useState(true);
@@ -48,13 +49,21 @@ export function CubeLabApp() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadSettings(), loadSolves()]).then(([s, v]) => {
-      setSettings(s);
-      setSolves(v);
-      setLoaded(true);
-    });
+    markBooted();
+    Promise.all([loadSettings(), loadSolves()])
+      .then(([s, v]) => {
+        setSettings(s);
+        setSolves(v);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
     registerOffline(setOffline);
-    initSolver().then(() => setSolverReady(true)).catch(() => toast.error("Scrambler failed to load"));
+    initSolver()
+      .then(() => setSolverReady(true))
+      .catch(() => {
+        recoverFromMissingFiles();
+        toast.error("Scrambler failed to load");
+      });
   }, []);
 
   useEffect(() => {

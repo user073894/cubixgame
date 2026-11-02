@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { CubeEngine, EngineSettings } from "@/lib/cube/engine";
 import type { Move } from "@/lib/cube/moves";
+import { recoverFromMissingFiles } from "@/lib/boot-recovery";
 
 export interface Cube3DHandle {
   enqueue: (m: Move[]) => Promise<void>;
@@ -31,15 +32,26 @@ export const Cube3D = forwardRef<Cube3DHandle, Props>(function Cube3D(props, ref
 
   useEffect(() => {
     let cancelled = false;
-    import("@/lib/cube/engine").then(({ CubeEngine }) => {
-      if (cancelled || !el.current) return;
-      engine.current = new CubeEngine(el.current, {
-        onUserMove: (m) => latest.current.onUserMove(m),
-        onQueueChange: (n) => latest.current.onBusy?.(n),
-        getSettings: () => latest.current.settings,
+    import("@/lib/cube/engine")
+      .then(({ CubeEngine }) => {
+        if (cancelled || !el.current) return;
+        try {
+          engine.current = new CubeEngine(el.current, {
+            onUserMove: (m) => latest.current.onUserMove(m),
+            onQueueChange: (n) => latest.current.onBusy?.(n),
+            getSettings: () => latest.current.settings,
+          });
+        } catch (err) {
+          // e.g. WebGL unavailable: never leave the splash up forever.
+          console.error(err);
+        }
+        requestAnimationFrame(() => latest.current.onReady());
+      })
+      .catch((err) => {
+        console.error(err);
+        recoverFromMissingFiles();
+        if (!cancelled) latest.current.onReady();
       });
-      requestAnimationFrame(() => latest.current.onReady());
-    });
     return () => {
       cancelled = true;
       engine.current?.dispose();
