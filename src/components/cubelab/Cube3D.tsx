@@ -13,7 +13,7 @@ export interface Cube3DHandle {
 interface Props {
   settings: EngineSettings;
   onUserMove: (m: Move) => void;
-  onReady: () => void;
+  onReady: (ok: boolean) => void;
   onBusy?: (n: number) => void;
 }
 
@@ -45,12 +45,13 @@ export const Cube3D = forwardRef<Cube3DHandle, Props>(function Cube3D(props, ref
           // e.g. WebGL unavailable: never leave the splash up forever.
           console.error(err);
         }
-        requestAnimationFrame(() => latest.current.onReady());
+        const ok = !!engine.current;
+        requestAnimationFrame(() => latest.current.onReady(ok));
       })
       .catch((err) => {
         console.error(err);
         recoverFromMissingFiles();
-        if (!cancelled) latest.current.onReady();
+        if (!cancelled) latest.current.onReady(false);
       });
     return () => {
       cancelled = true;

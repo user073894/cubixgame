@@ -33,7 +33,9 @@ export function CubeLabApp() {
   const [lastMove, setLastMove] = useState<Move | null>(null);
   const cubeRef = useRef<Cube3DHandle>(null);
   const mountedAt = useRef(Date.now());
-  const onCubeReady = useCallback(() => {
+  const [engineOk, setEngineOk] = useState(false);
+  const onCubeReady = useCallback((ok: boolean) => {
+    setEngineOk(ok);
     // Splash stays up for 5 seconds total.
     setTimeout(() => setSplash(false), Math.max(0, 5000 - (Date.now() - mountedAt.current)));
   }, []);
@@ -48,8 +50,12 @@ export function CubeLabApp() {
     if (settingsRef.current.haptics) vibrate(8);
   }, []);
 
+  // Everything loaded: allow a future broken deploy to be auto-recovered again.
   useEffect(() => {
-    markBooted();
+    if (engineOk && solverReady) markBooted();
+  }, [engineOk, solverReady]);
+
+  useEffect(() => {
     Promise.all([loadSettings(), loadSolves()])
       .then(([s, v]) => {
         setSettings(s);
