@@ -1,4 +1,4 @@
-import { createFileRoute, useHydrated } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { CubeLabApp } from "@/components/cubelab/CubeLabApp";
 
 export const Route = createFileRoute("/")({
@@ -12,11 +12,5 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Home,
+  component: CubeLabApp,
 });
-
-// The app is browser-only (WebGL, local storage). Rendering it after hydration keeps the server page
-// and the static-host shell identical to the first browser render, so startup has no mismatch.
-function Home() {
-  return useHydrated() ? <CubeLabApp /> : null;
-}
