@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { BOOT_RECOVERY_SCRIPT } from "../lib/boot-recovery";
 
 function NotFoundComponent() {
   return (
@@ -92,6 +93,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: `${import.meta.env.BASE_URL}manifest.webmanifest` },
       { rel: "apple-touch-icon", href: `${import.meta.env.BASE_URL}icons/apple-touch-icon.png` },
     ],
+    // Dark page from the very first paint (before CSS/JS arrive), so loading is never a white screen.
+    styles: [{ children: "html,body{background:#0b0b0d;color-scheme:dark}" }],
+    scripts: [{ children: BOOT_RECOVERY_SCRIPT }],
   }),
   shellComponent: RootShell,
   component: RootComponent,

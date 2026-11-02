@@ -22,3 +22,4 @@
 - Records graph data is derived from saved solves through the shared penalty/average functions; never store a second results series that could diverge from history edits.
 - Static hosting (GitHub Pages, Netlify, Vercel, any file host) uses `npm run build:static` (STATIC_EXPORT=1 SPA shell + scripts/static-export.mjs → ./static); asset/icon/service-worker paths must use import.meta.env.BASE_URL so sub-folder hosting works. Lovable publishing keeps the default build.
 - Service-worker settings live in pwa-workbox.mjs, shared by vite.config.ts and the static export, so both builds cache the same files.
+- Startup recovery lives in src/lib/boot-recovery.ts (inline head script): a missing hashed app file after a new deploy clears caches/service worker and reloads once per tab session; the app clears the flag only after the 3D engine and solver load, so it can never reload-loop. Page navigations stay NetworkFirst without a timeout so a stale page is used only offline.

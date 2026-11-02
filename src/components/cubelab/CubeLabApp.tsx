@@ -17,6 +17,7 @@ import { CubeState } from "@/lib/cube/state";
 import type { Move } from "@/lib/cube/moves";
 import { playClick, vibrate } from "@/lib/feedback";
 import { registerOffline, type OfflineState } from "@/lib/pwa";
+import { markBooted, recoverFromMissingFiles } from "@/lib/boot-recovery";
 
 export function CubeLabApp() {
   const [splash, setSplash] = useState(true);
@@ -32,7 +33,9 @@ export function CubeLabApp() {
   const [lastMove, setLastMove] = useState<Move | null>(null);
   const cubeRef = useRef<Cube3DHandle>(null);
   const mountedAt = useRef(Date.now());
-  const onCubeReady = useCallback(() => {
+  const [engineOk, setEngineOk] = useState(false);
+  const onCubeReady = useCallback((ok: boolean) => {
+    setEngineOk(ok);
     // Splash stays up for 5 seconds total.
     setTimeout(() => setSplash(false), Math.max(0, 5000 - (Date.now() - mountedAt.current)));
   }, []);
@@ -47,14 +50,26 @@ export function CubeLabApp() {
     if (settingsRef.current.haptics) vibrate(8);
   }, []);
 
+  // Everything loaded: allow a future broken deploy to be auto-recovered again.
   useEffect(() => {
-    Promise.all([loadSettings(), loadSolves()]).then(([s, v]) => {
-      setSettings(s);
-      setSolves(v);
-      setLoaded(true);
-    });
+    if (engineOk && solverReady) markBooted();
+  }, [engineOk, solverReady]);
+
+  useEffect(() => {
+    Promise.all([loadSettings(), loadSolves()])
+      .then(([s, v]) => {
+        setSettings(s);
+        setSolves(v);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
     registerOffline(setOffline);
-    initSolver().then(() => setSolverReady(true)).catch(() => toast.error("Scrambler failed to load"));
+    initSolver()
+      .then(() => setSolverReady(true))
+      .catch(() => {
+        recoverFromMissingFiles();
+        toast.error("Scrambler failed to load");
+      });
   }, []);
 
   useEffect(() => {

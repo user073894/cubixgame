@@ -11,8 +11,10 @@ export const workboxOptions = {
     {
       urlPattern: ({ request, url }) =>
         (request.mode === "navigate" || url.pathname.endsWith("/")) && !url.pathname.startsWith("/~oauth"),
+      // Always the live page when online; the saved copy is only used offline. A timeout fallback
+      // would serve an outdated page whose files were replaced by a newer deploy (blank screen).
       handler: "NetworkFirst",
-      options: { cacheName: "cubelab-pages", networkTimeoutSeconds: 3 },
+      options: { cacheName: "cubelab-pages" },
     },
     {
       urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.includes("/assets/"),
