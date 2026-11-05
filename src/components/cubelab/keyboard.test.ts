@@ -32,7 +32,8 @@ describe("codeLabel / buildKeyGuide", () => {
 
   it("shows rebound keys in the guide", () => {
     const guide = buildKeyGuide({ ...DEFAULT_KEYS, R: "KeyP" });
-    expect(guide[0][0]).toContain("P");
-    expect(guide[0][0]).not.toContain("R ");
+    const faces = guide[0]?.[0] ?? "";
+    expect(faces).toContain("P");
+    expect(faces).not.toContain("R ");
   });
 });
