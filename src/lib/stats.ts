@@ -8,6 +8,19 @@ export interface Solve {
   date: number;
   inspection?: number | null; // inspection duration ms (null when inspection was off)
   inspectionPenalty?: Penalty | undefined;
+  mode?: "cube" | "timer"; // which interface recorded it; missing = virtual cube (legacy)
+}
+
+/** Records belong to one interface: virtual cube and timer-only keep separate histories. */
+export function solvesForMode(solves: Solve[], mode: "cube" | "timer"): Solve[] {
+  return solves.filter((s) => (s.mode ?? "cube") === mode);
+}
+
+/** ms shaved off the previous best, or null when this solve is not a new personal best. */
+export function pbShaved(prevBest: number | null, solve: Solve): number | null {
+  const eff = effective(solve);
+  if (!isFinite(eff) || prevBest === null || eff >= prevBest) return null;
+  return prevBest - eff;
 }
 
 export const INSPECTION_PLUS2_MS = 15000;
