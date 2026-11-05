@@ -1,5 +1,6 @@
 import { get, set } from "idb-keyval";
 import type { Solve } from "./stats";
+import { DEFAULT_KEYS, type KeyBindings } from "@/components/cubelab/keyboard";
 
 export interface Settings {
   controls: "easy" | "precise";
@@ -13,6 +14,7 @@ export interface Settings {
   theme: "dark" | "light";
   sensitivity: number;
   speed: number;
+  keys: KeyBindings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -27,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   sensitivity: 1,
   speed: 1,
+  keys: DEFAULT_KEYS,
 };
 
 export async function loadSettings(): Promise<Settings> {
@@ -34,6 +37,7 @@ export async function loadSettings(): Promise<Settings> {
     const raw = { ...DEFAULT_SETTINGS, ...((await get("cubelab:settings")) ?? {}) } as Settings & { showMovePanel?: boolean };
     delete raw.showMovePanel;
     if (raw.controls !== "easy" && raw.controls !== "precise") raw.controls = "easy";
+    raw.keys = { ...DEFAULT_KEYS, ...(raw.keys ?? {}) };
     return raw;
   } catch {
     return DEFAULT_SETTINGS;
