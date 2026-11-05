@@ -9,9 +9,9 @@ import { AppHeader, ScrambleDisplay, SolveHistory, StatisticsPanel } from "./pan
 import { SettingsMenu } from "./SettingsMenu";
 import { SolveGraph } from "./SolveGraph";
 import { useTimer } from "./useTimer";
-import { KEY_GUIDE, keyToMove } from "./keyboard";
+import { buildKeyGuide, keyToMove } from "./keyboard";
 import { DEFAULT_SETTINGS, loadSettings, loadSolves, saveSettings, saveSolves, type Settings } from "@/lib/storage";
-import { INSPECTION_DNF_MS, INSPECTION_PLUS2_MS, formatTime, type Penalty, type Solve } from "@/lib/stats";
+import { INSPECTION_DNF_MS, INSPECTION_PLUS2_MS, bestSingle, formatTime, pbShaved, solvesForMode, type Penalty, type Solve } from "@/lib/stats";
 import { initSolver, randomScramble } from "@/lib/cube/solver";
 import { CubeState } from "@/lib/cube/state";
 import type { Move } from "@/lib/cube/moves";
@@ -31,6 +31,7 @@ export function CubeLabApp() {
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [tutorial, setTutorial] = useState(false);
   const [lastMove, setLastMove] = useState<Move | null>(null);
+  const [pb, setPb] = useState<number | null>(null); // ms shaved off the previous best
   const cubeRef = useRef<Cube3DHandle>(null);
   const mountedAt = useRef(Date.now());
   const [engineOk, setEngineOk] = useState(false);
@@ -80,6 +81,11 @@ export function CubeLabApp() {
 
   const update = (p: Partial<Settings>) => setSettings((s) => ({ ...s, ...p }));
 
+  const mode: "cube" | "timer" = settings.timerOnly ? "timer" : "cube";
+  const modeSolves = useMemo(() => solvesForMode(solves, mode), [solves, mode]);
+  const modeSolvesRef = useRef(modeSolves);
+  modeSolvesRef.current = modeSolves;
+
   const timer = useTimer({
     inspection: settings.inspection,
     holdToStart: settings.holdToStart,
@@ -94,7 +100,10 @@ export function CubeLabApp() {
         date: Date.now(),
         inspection: inspectionMs === null ? null : Math.round(inspectionMs),
         inspectionPenalty: inspectionMs === null ? undefined : penalty,
+        mode,
       };
+      const shaved = pbShaved(bestSingle(modeSolvesRef.current), solve);
+      if (shaved !== null) setPb(shaved);
       setSolves((s) => [solve, ...s]);
       newScrambleRef.current();
     },
@@ -154,8 +163,12 @@ export function CubeLabApp() {
     hardReset();
     setScramble([]);
     setLastMove(null);
+    setPb(null);
     timer.reset(); // cancels inspection or an unfinished solve without recording it
   }
+
+  // Switching interfaces swaps the record set; any celebration belongs to the old one.
+  useEffect(() => setPb(null), [mode]);
 
   // Keyboard: timer (Space) and cube moves
   useEffect(() => {
@@ -167,13 +180,14 @@ export function CubeLabApp() {
       if (e.code === "Digit2" || e.code === "Numpad2") return (held.double = true), e.preventDefault();
       if (e.code === "Space") {
         e.preventDefault();
+        setPb(null); // preparing the next solve clears the celebration
         if (!e.repeat) timerRef.current.press();
         return;
       }
       if (e.key === "?") return e.preventDefault(), setTutorial(true);
       if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.code)) return e.preventDefault();
       if (settingsRef.current.timerOnly) return;
-      const m = keyToMove(e, held);
+      const m = keyToMove(e, held, settingsRef.current.keys);
       if (!m) return;
       e.preventDefault();
       if (e.repeat) return;
@@ -241,7 +255,7 @@ export function CubeLabApp() {
         <button
           type="button"
           className={`mx-auto flex touch-none ${settings.timerOnly ? "min-h-0 flex-1 w-full justify-center" : "shrink-0"} select-none flex-col items-center px-6 py-1 outline-none`}
-          onPointerDown={(e) => (e.preventDefault(), t.press())}
+          onPointerDown={(e) => (e.preventDefault(), setPb(null), t.press())}
           onPointerUp={() => t.release()}
           onPointerCancel={() => t.release()}
           onKeyDown={(e) => e.code === "Space" && e.preventDefault()}
@@ -249,6 +263,11 @@ export function CubeLabApp() {
         >
           <span className={`font-mono font-bold tabular tracking-tight transition-colors ${settings.timerOnly ? "text-7xl sm:text-9xl lg:text-[12rem]" : "text-5xl sm:text-6xl"} ${timerColor}`}>{timerText}</span>
           <span className="mt-0.5 text-xs text-muted-foreground">{timerHint}</span>
+          {pb !== null && (
+            <span className="animate-pb-pulse mt-1 rounded-full bg-timer-ready/15 px-3 py-1 text-sm font-semibold text-timer-ready">
+              🎉 NEW PB! -{(pb / 1000).toFixed(2)}s
+            </span>
+          )}
         </button>
 
         <div className="mt-1 shrink-0">
@@ -283,13 +302,13 @@ export function CubeLabApp() {
 
       <Sheet open={recordsOpen} onOpenChange={setRecordsOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader><SheetTitle>Records</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>Records — {settings.timerOnly ? "Timer only" : "Virtual cube"}</SheetTitle></SheetHeader>
           <div className="flex flex-col gap-4 px-4 pb-6">
-            <StatisticsPanel solves={solves} format={settings.timeFormat} />
-            <SolveGraph solves={solves} format={settings.timeFormat} />
+            <StatisticsPanel solves={modeSolves} format={settings.timeFormat} />
+            <SolveGraph solves={modeSolves} format={settings.timeFormat} />
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent solves</h2>
             <SolveHistory
-              solves={solves}
+              solves={modeSolves}
               format={settings.timeFormat}
               onPenalty={(id, p: Penalty) => setSolves((s) => s.map((x) => (x.id === id ? { ...x, penalty: p } : x)))}
               onDelete={(id) => setSolves((s) => s.filter((x) => x.id !== id))}
@@ -305,7 +324,7 @@ export function CubeLabApp() {
         update={update}
         offline={offline}
         onRecenter={() => cubeRef.current?.recenter()}
-        onClearHistory={() => (setSolves([]), toast.success("History cleared"))}
+        onClearHistory={() => (setSolves((s) => s.filter((x) => (x.mode ?? "cube") !== mode)), setPb(null), toast.success("History cleared"))}
         onTutorial={() => (setSettingsOpen(false), setTutorial(true))}
       />
 
@@ -318,7 +337,7 @@ export function CubeLabApp() {
           </ul>
           <h3 className="mt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Keyboard</h3>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-            {KEY_GUIDE.map(([k, v]) => (
+            {buildKeyGuide(settings.keys).map(([k, v]) => (
               <div key={k} className="contents">
                 <dt className="font-mono text-foreground">{k}</dt>
                 <dd className="text-muted-foreground">{v}</dd>
