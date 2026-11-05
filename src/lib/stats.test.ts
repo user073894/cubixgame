@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { averageOf, bestSingle, formatTime, type Solve } from "./stats";
+import { averageOf, bestSingle, formatTime, pbShaved, solvesForMode, type Solve } from "./stats";
 import { invertAlg, moveToTurn, turnToMove } from "./cube/moves";
 
 const mk = (time: number, penalty: Solve["penalty"] = "none"): Solve => ({
@@ -24,6 +24,36 @@ describe("averages", () => {
   });
   it("formats MM:SS.hh", () => {
     expect(formatTime(65432)).toBe("01:05.43");
+  });
+});
+
+describe("personal bests", () => {
+  it("reports the time shaved off the old best", () => {
+    expect(pbShaved(10000, mk(8760))).toBe(1240);
+  });
+  it("a slower solve is not a PB", () => {
+    expect(pbShaved(10000, mk(10000))).toBeNull();
+    expect(pbShaved(10000, mk(11000))).toBeNull();
+  });
+  it("DNF never counts as a PB", () => {
+    expect(pbShaved(10000, mk(1, "dnf"))).toBeNull();
+  });
+  it("+2 compares with the penalty included", () => {
+    expect(pbShaved(10000, mk(9000, "+2"))).toBeNull(); // 11s effective
+    expect(pbShaved(10000, mk(7000, "+2"))).toBe(1000); // 9s effective
+  });
+  it("no previous best means no celebration", () => {
+    expect(pbShaved(null, mk(5000))).toBeNull();
+  });
+});
+
+describe("per-mode records", () => {
+  it("keeps virtual-cube and timer-only solves apart", () => {
+    const cube: Solve = { ...mk(1000), mode: "cube" };
+    const timer: Solve = { ...mk(2000), mode: "timer" };
+    const legacy = mk(3000); // no mode = virtual cube
+    expect(solvesForMode([cube, timer, legacy], "cube")).toEqual([cube, legacy]);
+    expect(solvesForMode([cube, timer, legacy], "timer")).toEqual([timer]);
   });
 });
 

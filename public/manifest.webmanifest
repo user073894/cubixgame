@@ -2,6 +2,7 @@
   "name": "cubix",
   "short_name": "cubix",
   "description": "Offline speedcubing timer with a realistic 3D Rubik's Cube.",
+  "version": "1.0.26",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

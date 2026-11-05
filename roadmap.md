@@ -17,3 +17,8 @@
 - [x] Repair confirmed glitches and verify Records and cube interaction on desktop/mobile.
 - [x] Make the app deploy to GitHub Pages and any static host (no 404 / missing index.html).
 - [x] Fix long white screen after updates (auto-recover from outdated cached page, dark first paint).
+- [ ] Tidy Settings into clear groups (Settings page only).
+- [ ] Bump version to 1.0.26 everywhere.
+- [ ] Custom keyboard controls, PC only, persisted.
+- [ ] New-PB celebration badge under the timer (clears on Space).
+- [ ] Separate records for virtual-cube vs timer-only mode.

@@ -170,3 +170,19 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
+
+@keyframes pb-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.05);
+  }
+}
+
+@utility animate-pb-pulse {
+  animation: pb-pulse 1.2s ease-in-out infinite;
+}
