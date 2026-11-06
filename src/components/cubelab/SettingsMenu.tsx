@@ -12,7 +12,7 @@ import type { OfflineState } from "@/lib/pwa";
 import { DEFAULT_KEYS, RESERVED_CODES, codeLabel, type KeyBindings } from "./keyboard";
 import { useEffect, useState, type ReactNode } from "react";
 
-export const APP_VERSION = "1.0.26";
+export const APP_VERSION = "1.1.26";
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
