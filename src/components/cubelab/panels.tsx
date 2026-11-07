@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, RefreshCw, Trash2, WifiOff, Wifi, Settings2 } from "lucide-react";
+import { Copy, RefreshCw, Trash2, WifiOff, Wifi, Menu, Timer, Box, List, BarChart3, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -7,17 +7,22 @@ import type { Move } from "@/lib/cube/moves";
 import { averageOf, bestAverage, bestSingle, formatSolve, formatTime, type Penalty, type Solve } from "@/lib/stats";
 import type { OfflineState } from "@/lib/pwa";
 
-export function AppHeader({ offline, onSettings }: { offline: OfflineState; onSettings: () => void }) {
+export function AppHeader({ onSettings, timerOnly, onMode, onRecords, onGraph, onReset }: { onSettings: () => void; timerOnly: boolean; onMode: (timerOnly: boolean) => void; onRecords: () => void; onGraph: () => void; onReset: () => void }) {
   return (
-    <header className="flex items-center justify-between px-5 lg:px-8 pt-[max(env(safe-area-inset-top),1rem)] pb-2">
-      <h1 className="text-xl font-bold tracking-tight">
-        cub<span className="text-muted-foreground">ix</span>
-      </h1>
-      <div className="flex items-center gap-2">
-        {void offline}
-        <Button variant="ghost" size="icon" aria-label="Settings" onClick={onSettings}>
-          <Settings2 className="size-5" />
-        </Button>
+    <header className="cubix-header">
+      <div className="flex min-w-0 items-center gap-2">
+        <Button variant="ghost" size="icon" aria-label="Settings" title="Settings" onClick={onSettings}><Menu /></Button>
+        <h1 className="text-xl font-bold">cub<span className="text-muted-foreground">ix</span></h1>
+        <span className="ml-2 hidden text-xs text-muted-foreground sm:block">3 × 3 × 3</span>
+      </div>
+      <div className="flex items-center gap-1 sm:gap-3">
+        <nav className="timer-nav" aria-label="Cube interface">
+          <Button variant="ghost" size="icon" className={timerOnly ? "nav-selected" : ""} aria-label="Timer only" aria-pressed={timerOnly} title="Timer only" onClick={() => onMode(true)}><Timer /></Button>
+          <Button variant="ghost" size="icon" className={!timerOnly ? "nav-selected" : ""} aria-label="Virtual cube" aria-pressed={!timerOnly} title="Virtual cube" onClick={() => onMode(false)}><Box /></Button>
+          <Button variant="ghost" size="icon" aria-label="Records" title="Records" onClick={onRecords}><List /></Button>
+          <Button variant="ghost" size="icon" aria-label="Records graph" title="Records graph" onClick={onGraph}><BarChart3 /></Button>
+        </nav>
+        <Button variant="ghost" size="icon" aria-label={timerOnly ? "Cancel solve" : "Reset cube"} title={timerOnly ? "Cancel solve" : "Reset cube"} onClick={onReset}><RotateCcw /></Button>
       </div>
     </header>
   );
@@ -44,11 +49,11 @@ export function OfflineStatus({ state, compact }: { state: OfflineState; compact
 export function ScrambleDisplay({ scramble, loading, onNew }: { scramble: Move[]; loading: boolean; onNew: () => void }) {
   const text = scramble.join(" ");
   return (
-    <div className="grid grid-cols-[4.75rem_minmax(0,1fr)_4.75rem] items-center px-2 sm:px-4">
-      <p className="col-start-2 line-clamp-2 text-center font-mono text-sm leading-snug sm:text-base">
+    <div className="scramble-display">
+      <p className="scramble-text">
         {loading ? <span className="text-muted-foreground">Preparing scrambler…</span> : text || <span className="text-muted-foreground">Press Scramble to start</span>}
       </p>
-      <div className="col-start-3 flex justify-end gap-0.5">
+      <div className="scramble-actions">
         <Button variant="ghost" size="icon" aria-label="New scramble" disabled={loading} onClick={onNew}>
           <RefreshCw className="size-4" />
         </Button>
