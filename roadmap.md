@@ -1,4 +1,5 @@
 # cubix
+- [ ] Match the supplied timer interface in black with cubix branding, preserving virtual-cube mode and existing controls.
 - [x] Fix the published page's missing cube constructor.
 - [x] Update the app version to 0.3.26.
 - [x] Verify optimized cube logic, page loading, scramble/solve/reset, and saved timer results.
