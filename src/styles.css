@@ -83,7 +83,7 @@
   --cube-back: #1462d5;
   --cube-body: #121316;
   --radius: 1rem;
-  --background: oklch(0.13 0.004 270);
+  --background: oklch(0.08 0 0);
   --foreground: oklch(0.97 0 0);
   --surface: oklch(0.18 0.005 270);
   --surface-raised: oklch(0.23 0.006 270);
@@ -186,3 +186,43 @@
 @utility animate-pb-pulse {
   animation: pb-pulse 1.2s ease-in-out infinite;
 }
+
+.cubix-app { background: var(--background); letter-spacing: 0; }
+.cubix-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; padding: max(env(safe-area-inset-top), 18px) 24px 12px; }
+.timer-nav { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 3px 5px; gap: 2px; }
+.timer-nav button { position: relative; border-radius: 999px; color: var(--muted-foreground); }
+.timer-nav .nav-selected { color: var(--foreground); background: var(--surface-raised); }
+.nav-selected::after { content: ""; position: absolute; bottom: 1px; left: 12px; right: 12px; height: 2px; background: var(--timer-ready); border-radius: 2px; }
+.scramble-display { position: relative; margin: 12px auto 0; padding: 0 100px; width: 100%; }
+.scramble-text { max-width: 960px; margin: 0 auto; text-align: center; font-size: 20px; line-height: 1.65; font-weight: 400; text-wrap: balance; }
+.scramble-actions { position: absolute; right: 20px; top: 0; display: flex; gap: 2px; }
+.timer-surface { display: flex; height: auto; border-radius: 0; width: 100%; min-height: 0; flex-direction: column; touch-action: none; user-select: none; padding: 20px 12px; gap: 0; white-space: normal; flex-shrink: 0; }
+.timer-surface:hover, .timer-surface:active { background: transparent; }
+.timer-surface-large { flex: 1; padding-bottom: 100px; }
+.timer-digits { font-family: var(--font-sans); font-weight: 500; font-size: 144px; line-height: 1.1; letter-spacing: 0; }
+.timer-surface-cube .timer-digits { font-size: 64px; }
+.timer-summary { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px 28px max(env(safe-area-inset-bottom), 24px); flex-shrink: 0; }
+.timer-summary-stats { display: grid; grid-template-columns: auto auto auto auto; column-gap: 12px; row-gap: 6px; font-size: 12px; color: var(--muted-foreground); }
+.timer-summary-stats dd { font-variant-numeric: tabular-nums; color: var(--foreground); }
+.scramble-net { display: grid; grid-template-columns: repeat(4, 36px); grid-template-rows: repeat(3, 36px); gap: 3px; }
+.net-face { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; padding: 1px; background: var(--cube-body); }
+.net-face-U { grid-area: 1 / 2; }.net-face-L { grid-area: 2 / 1; }.net-face-F { grid-area: 2 / 2; }.net-face-R { grid-area: 2 / 3; }.net-face-B { grid-area: 2 / 4; }.net-face-D { grid-area: 3 / 2; }
+.net-color-U { background: var(--cube-up); }.net-color-D { background: var(--cube-down); }.net-color-R { background: var(--cube-right); }.net-color-L { background: var(--cube-left); }.net-color-F { background: var(--cube-front); }.net-color-B { background: var(--cube-back); }
+@media (max-width: 639px) {
+  .cubix-header { padding-left: 10px; padding-right: 10px; }
+  .cubix-header h1 { font-size: 18px; }
+  .timer-nav { gap: 0; padding: 2px; }
+  .timer-nav button { width: 32px; height: 32px; }
+  .scramble-display { padding: 0 20px 34px; margin-top: 12px; }
+  .scramble-text { font-size: 18px; line-height: 1.55; }
+  .scramble-actions { top: auto; bottom: 0; right: 12px; }
+  .timer-digits { font-size: 80px; }
+  .timer-surface-large { padding-bottom: 90px; }
+  .timer-surface-cube { padding: 8px 12px; }
+  .timer-surface-cube .timer-digits { font-size: 48px; }
+  .timer-summary { padding-left: 16px; padding-right: 16px; gap: 8px; }
+  .timer-summary-stats { font-size: 10px; column-gap: 6px; }
+  .scramble-net { grid-template-columns: repeat(4, 28px); grid-template-rows: repeat(3, 28px); gap: 2px; }
+}
+@media (max-height: 600px) { .timer-surface-large { padding-bottom: 0; }.timer-summary { padding-top: 4px; }.timer-digits { font-size: 72px; } }
+@media (prefers-reduced-motion: reduce) { .animate-pb-pulse { animation: none; } }

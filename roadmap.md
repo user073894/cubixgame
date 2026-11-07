@@ -1,4 +1,5 @@
 # cubix
+- [x] Match the supplied timer interface in black with cubix branding, preserving virtual-cube mode and existing controls.
 - [x] Fix the published page's missing cube constructor.
 - [x] Update the app version to 0.3.26.
 - [x] Verify optimized cube logic, page loading, scramble/solve/reset, and saved timer results.
@@ -17,8 +18,8 @@
 - [x] Repair confirmed glitches and verify Records and cube interaction on desktop/mobile.
 - [x] Make the app deploy to GitHub Pages and any static host (no 404 / missing index.html).
 - [x] Fix long white screen after updates (auto-recover from outdated cached page, dark first paint).
-- [ ] Tidy Settings into clear groups (Settings page only).
-- [ ] Bump version to 1.0.26 everywhere.
-- [ ] Custom keyboard controls, PC only, persisted.
-- [ ] New-PB celebration badge under the timer (clears on Space).
-- [ ] Separate records for virtual-cube vs timer-only mode.
+- [x] Tidy Settings into clear groups (Settings page only).
+- [x] Bump version to 1.0.26 everywhere (subsequently updated to 1.1.26).
+- [x] Custom keyboard controls, PC only, persisted.
+- [x] New-PB celebration badge under the timer (clears on Space).
+- [x] Separate records for virtual-cube vs timer-only mode.

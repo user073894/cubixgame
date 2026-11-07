@@ -8,6 +8,7 @@ import { Cube3D, type Cube3DHandle } from "./Cube3D";
 import { AppHeader, ScrambleDisplay, SolveHistory, StatisticsPanel } from "./panels";
 import { SettingsMenu } from "./SettingsMenu";
 import { SolveGraph } from "./SolveGraph";
+import { TimerSummary } from "./TimerSummary";
 import { useTimer } from "./useTimer";
 import { buildKeyGuide, keyToMove } from "./keyboard";
 import { DEFAULT_SETTINGS, loadSettings, loadSolves, saveSettings, saveSolves, type Settings } from "@/lib/storage";
@@ -29,6 +30,7 @@ export function CubeLabApp() {
   const [scramble, setScramble] = useState<Move[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
+  const [recordsView, setRecordsView] = useState<"history" | "graph">("history");
   const [tutorial, setTutorial] = useState(false);
   const [lastMove, setLastMove] = useState<Move | null>(null);
   const [pb, setPb] = useState<number | null>(null); // ms shaved off the previous best
@@ -241,7 +243,7 @@ export function CubeLabApp() {
           : settings.inspection ? "Hold timer or Space to inspect" : "Hold timer or Space to start";
 
   return (
-    <div className="bg-app fixed inset-0 flex flex-col overflow-hidden overscroll-none">
+    <div className={`cubix-app fixed inset-0 flex flex-col overflow-hidden overscroll-none ${settings.timerOnly ? "timer-only" : "virtual-cube"}`}>
       {splash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
           <span className="text-4xl font-bold tracking-tight">
@@ -249,30 +251,31 @@ export function CubeLabApp() {
           </span>
         </div>
       )}
-      <div className="mx-auto flex h-full w-full max-w-3xl flex-col lg:max-w-none">
-        <AppHeader offline={offline} onSettings={() => setSettingsOpen(true)} />
+      <div className="mx-auto flex h-full w-full flex-col">
+        <AppHeader onSettings={() => setSettingsOpen(true)} timerOnly={settings.timerOnly} onMode={(timerOnly) => { timer.reset(); setPb(null); update({ timerOnly }); }} onRecords={() => { setRecordsView("history"); setRecordsOpen(true); }} onGraph={() => { setRecordsView("graph"); setRecordsOpen(true); }} onReset={reset} />
 
-        <button
+        <div className="shrink-0">
+          <ScrambleDisplay scramble={scramble} loading={!solverReady} onNew={newScramble} />
+        </div>
+
+        <Button
           type="button"
-          className={`mx-auto flex touch-none ${settings.timerOnly ? "min-h-0 flex-1 w-full justify-center" : "shrink-0"} select-none flex-col items-center px-6 py-1 outline-none`}
+          variant="ghost"
+          className={`timer-surface ${settings.timerOnly ? "timer-surface-large" : "timer-surface-cube"}`}
           onPointerDown={(e) => (e.preventDefault(), setPb(null), t.press())}
           onPointerUp={() => t.release()}
           onPointerCancel={() => t.release()}
           onKeyDown={(e) => e.code === "Space" && e.preventDefault()}
           aria-label="Timer"
         >
-          <span className={`font-mono font-bold tabular tracking-tight transition-colors ${settings.timerOnly ? "text-7xl sm:text-9xl lg:text-[12rem]" : "text-5xl sm:text-6xl"} ${timerColor}`}>{timerText}</span>
-          <span className="mt-0.5 text-xs text-muted-foreground">{timerHint}</span>
+          <span className={`timer-digits tabular transition-colors ${timerColor}`}>{timerText}</span>
+          {(t.arm !== "none" || inspecting) && <span className="mt-2 text-xs text-muted-foreground">{timerHint}</span>}
           {pb !== null && (
             <span className="animate-pb-pulse mt-1 rounded-full bg-timer-ready/15 px-3 py-1 text-sm font-semibold text-timer-ready">
               🎉 NEW PB! -{(pb / 1000).toFixed(2)}s
             </span>
           )}
-        </button>
-
-        <div className="mt-1 shrink-0">
-          <ScrambleDisplay scramble={scramble} loading={!solverReady} onNew={newScramble} />
-        </div>
+        </Button>
 
         <div className={`relative min-h-0 flex-1 items-center justify-center ${settings.timerOnly ? "hidden" : "flex"}`} style={{ containerType: "size" }}>
           <div className="aspect-square" style={{ width: "min(100cqw, 100cqh, 640px)" }}>
@@ -291,13 +294,7 @@ export function CubeLabApp() {
           </div>
         </div>
 
-        <div className="grid shrink-0 grid-cols-3 gap-2 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] lg:mx-auto lg:w-full lg:max-w-md lg:px-8">
-          <Button variant="pillPrimary" className="h-12 lg:h-9" disabled={!solverReady} onClick={newScramble}>Scramble</Button>
-          <Button variant="pill" className="h-12 lg:h-9" onClick={() => setRecordsOpen(true)}>
-            <BarChart3 className="size-4" /> Records
-          </Button>
-          <Button variant="pill" className="h-12 lg:h-9" onClick={reset}>{settings.timerOnly ? "Cancel" : "Reset"}</Button>
-        </div>
+        {settings.timerOnly && <TimerSummary solves={modeSolves} scramble={scramble} format={settings.timeFormat} />}
       </div>
 
       <Sheet open={recordsOpen} onOpenChange={setRecordsOpen}>
@@ -305,7 +302,12 @@ export function CubeLabApp() {
           <SheetHeader><SheetTitle>Records — {settings.timerOnly ? "Timer only" : "Virtual cube"}</SheetTitle></SheetHeader>
           <div className="flex flex-col gap-4 px-4 pb-6">
             <StatisticsPanel solves={modeSolves} format={settings.timeFormat} />
-            <SolveGraph solves={modeSolves} format={settings.timeFormat} />
+            <div className="flex gap-2" aria-label="Records view">
+              <Button variant={recordsView === "history" ? "secondary" : "ghost"} onClick={() => setRecordsView("history")}>History</Button>
+              <Button variant={recordsView === "graph" ? "secondary" : "ghost"} onClick={() => setRecordsView("graph")}><BarChart3 /> Graph</Button>
+            </div>
+            {recordsView === "graph" && <SolveGraph solves={modeSolves} format={settings.timeFormat} />}
+            {recordsView === "history" && <>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent solves</h2>
             <SolveHistory
               solves={modeSolves}
@@ -313,6 +315,7 @@ export function CubeLabApp() {
               onPenalty={(id, p: Penalty) => setSolves((s) => s.map((x) => (x.id === id ? { ...x, penalty: p } : x)))}
               onDelete={(id) => setSolves((s) => s.filter((x) => x.id !== id))}
             />
+            </>}
           </div>
         </SheetContent>
       </Sheet>
