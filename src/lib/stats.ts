@@ -1,4 +1,5 @@
 export type Penalty = "none" | "+2" | "dnf";
+import type { Puzzle } from "./puzzles";
 
 export interface Solve {
   id: string;
@@ -9,11 +10,12 @@ export interface Solve {
   inspection?: number | null; // inspection duration ms (null when inspection was off)
   inspectionPenalty?: Penalty | undefined;
   mode?: "cube" | "timer"; // which interface recorded it; missing = virtual cube (legacy)
+  puzzle?: Puzzle;
 }
 
 /** Records belong to one interface: virtual cube and timer-only keep separate histories. */
-export function solvesForMode(solves: Solve[], mode: "cube" | "timer"): Solve[] {
-  return solves.filter((s) => (s.mode ?? "cube") === mode);
+export function solvesForMode(solves: Solve[], mode: "cube" | "timer", puzzle: Puzzle = "3x3x3"): Solve[] {
+  return solves.filter((s) => (s.mode ?? "cube") === mode && (s.puzzle ?? "3x3x3") === puzzle);
 }
 
 /** ms shaved off the previous best, or null when this solve is not a new personal best. */

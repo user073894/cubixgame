@@ -1,5 +1,6 @@
 import { get, set } from "idb-keyval";
 import type { Solve } from "./stats";
+import type { Puzzle } from "./puzzles";
 import { DEFAULT_KEYS, type KeyBindings } from "@/components/cubelab/keyboard";
 
 export interface Settings {
@@ -7,6 +8,7 @@ export interface Settings {
   rigidRotation: boolean;
   inspection: boolean;
   timerOnly: boolean;
+  puzzle: Puzzle;
   holdToStart: boolean;
   timeFormat: "mm" | "ss";
   sound: boolean;
@@ -22,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rigidRotation: false,
   inspection: false,
   timerOnly: false,
+  puzzle: "3x3x3",
   holdToStart: true,
   timeFormat: "mm",
   sound: true,

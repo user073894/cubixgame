@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, RefreshCw, Trash2, WifiOff, Wifi, Menu, Timer, Box, List, BarChart3, RotateCcw } from "lucide-react";
+import { Copy, RefreshCw, Trash2, WifiOff, Wifi, Menu, Timer, Box, List, RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -7,20 +7,19 @@ import type { Move } from "@/lib/cube/moves";
 import { averageOf, bestAverage, bestSingle, formatSolve, formatTime, type Penalty, type Solve } from "@/lib/stats";
 import type { OfflineState } from "@/lib/pwa";
 
-export function AppHeader({ onSettings, timerOnly, onMode, onRecords, onGraph, onReset }: { onSettings: () => void; timerOnly: boolean; onMode: (timerOnly: boolean) => void; onRecords: () => void; onGraph: () => void; onReset: () => void }) {
+export function AppHeader({ onSettings, timerOnly, onMode, onRecords, onReset, puzzleLabel, onPuzzle }: { onSettings: () => void; timerOnly: boolean; onMode: (timerOnly: boolean) => void; onRecords: () => void; onReset: () => void; puzzleLabel: string; onPuzzle: () => void }) {
   return (
     <header className="cubix-header">
       <div className="flex min-w-0 items-center gap-2">
         <Button variant="ghost" size="icon" aria-label="Settings" title="Settings" onClick={onSettings}><Menu /></Button>
         <h1 className="text-xl font-bold">cub<span className="text-muted-foreground">ix</span></h1>
-        <span className="ml-2 hidden text-xs text-muted-foreground sm:block">3 × 3 × 3</span>
       </div>
+      <Button variant="ghost" size="sm" className="puzzle-selector" aria-label="Choose puzzle" onClick={onPuzzle}>{puzzleLabel}<ChevronDown /></Button>
       <div className="flex items-center gap-1 sm:gap-3">
         <nav className="timer-nav" aria-label="Cube interface">
           <Button variant="ghost" size="icon" className={timerOnly ? "nav-selected" : ""} aria-label="Timer only" aria-pressed={timerOnly} title="Timer only" onClick={() => onMode(true)}><Timer /></Button>
           <Button variant="ghost" size="icon" className={!timerOnly ? "nav-selected" : ""} aria-label="Virtual cube" aria-pressed={!timerOnly} title="Virtual cube" onClick={() => onMode(false)}><Box /></Button>
           <Button variant="ghost" size="icon" aria-label="Records" title="Records" onClick={onRecords}><List /></Button>
-          <Button variant="ghost" size="icon" aria-label="Records graph" title="Records graph" onClick={onGraph}><BarChart3 /></Button>
         </nav>
         <Button variant="ghost" size="icon" aria-label={timerOnly ? "Cancel solve" : "Reset cube"} title={timerOnly ? "Cancel solve" : "Reset cube"} onClick={onReset}><RotateCcw /></Button>
       </div>
@@ -46,8 +45,8 @@ export function OfflineStatus({ state, compact }: { state: OfflineState; compact
   );
 }
 
-export function ScrambleDisplay({ scramble, loading, onNew }: { scramble: Move[]; loading: boolean; onNew: () => void }) {
-  const text = scramble.join(" ");
+export function ScrambleDisplay({ scramble, loading, onNew }: { scramble: Move[] | string; loading: boolean; onNew: () => void }) {
+  const text = typeof scramble === "string" ? scramble : scramble.join(" ");
   return (
     <div className="scramble-display">
       <p className="scramble-text">
