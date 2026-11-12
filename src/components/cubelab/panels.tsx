@@ -13,8 +13,8 @@ export function AppHeader({ onSettings, timerOnly, onMode, onRecords, onReset, p
       <div className="flex min-w-0 items-center gap-2">
         <Button variant="ghost" size="icon" aria-label="Settings" title="Settings" onClick={onSettings}><Menu /></Button>
         <h1 className="text-xl font-bold">cub<span className="text-muted-foreground">ix</span></h1>
+        <Button variant="ghost" size="sm" className="puzzle-selector" aria-label="Choose puzzle" onClick={onPuzzle}>{puzzleLabel}<ChevronDown /></Button>
       </div>
-      <Button variant="ghost" size="sm" className="puzzle-selector" aria-label="Choose puzzle" onClick={onPuzzle}>{puzzleLabel}<ChevronDown /></Button>
       <div className="flex items-center gap-1 sm:gap-3">
         <nav className="timer-nav" aria-label="Cube interface">
           <Button variant="ghost" size="icon" className={timerOnly ? "nav-selected" : ""} aria-label="Timer only" aria-pressed={timerOnly} title="Timer only" onClick={() => onMode(true)}><Timer /></Button>

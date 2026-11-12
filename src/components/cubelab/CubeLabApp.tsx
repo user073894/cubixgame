@@ -310,6 +310,7 @@ export function CubeLabApp() {
             <div className={is333 ? "h-full w-full" : "hidden"}>
               <Cube3D ref={cubeRef} settings={engineSettings} onUserMove={onUserMove} onReady={onCubeReady} />
             </div>
+            {!is333 && !settings.timerOnly && !otherScramble && <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading puzzle…</div>}
             {!is333 && !settings.timerOnly && otherScramble && (
               <PuzzlePlayer
                 ref={puzzleRef}

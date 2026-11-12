@@ -43,5 +43,5 @@ export const PuzzlePlayer = forwardRef<PuzzlePlayerHandle, {
     }).catch(() => { if (!cancelled && host.current) host.current.textContent = "Puzzle unavailable"; });
     return () => { cancelled = true; current?.remove(); player.current = null; };
   }, [puzzle, scramble]);
-  return <div ref={host} className="puzzle-player" aria-label="Interactive puzzle" />;
+  return <div ref={host} className="puzzle-player text-sm text-muted-foreground" aria-label="Interactive puzzle">Loading puzzle…</div>;
 });
