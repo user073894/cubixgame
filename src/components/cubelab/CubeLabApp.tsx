@@ -9,6 +9,8 @@ import { AppHeader, ScrambleDisplay, SolveHistory, StatisticsPanel } from "./pan
 import { SettingsMenu } from "./SettingsMenu";
 import { SolveGraph } from "./SolveGraph";
 import { TimerSummary } from "./TimerSummary";
+import { PuzzlePlayer, type PuzzlePlayerHandle } from "./PuzzlePlayer";
+import { PUZZLES, puzzleInfo, puzzleScramble, type Puzzle } from "@/lib/puzzles";
 import { useTimer } from "./useTimer";
 import { buildKeyGuide, keyToMove } from "./keyboard";
 import { DEFAULT_SETTINGS, loadSettings, loadSolves, saveSettings, saveSolves, type Settings } from "@/lib/storage";
@@ -28,6 +30,9 @@ export function CubeLabApp() {
   const [offline, setOffline] = useState<OfflineState>("installing");
   const [solverReady, setSolverReady] = useState(false);
   const [scramble, setScramble] = useState<Move[]>([]);
+  const [otherScramble, setOtherScramble] = useState("");
+  const [puzzleOpen, setPuzzleOpen] = useState(false);
+  const puzzleRef = useRef<PuzzlePlayerHandle>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [recordsView, setRecordsView] = useState<"history" | "graph">("history");
@@ -84,7 +89,9 @@ export function CubeLabApp() {
   const update = (p: Partial<Settings>) => setSettings((s) => ({ ...s, ...p }));
 
   const mode: "cube" | "timer" = settings.timerOnly ? "timer" : "cube";
-  const modeSolves = useMemo(() => solvesForMode(solves, mode), [solves, mode]);
+  const puzzle = settings.puzzle;
+  const is333 = puzzle === "3x3x3";
+  const modeSolves = useMemo(() => solvesForMode(solves, mode, puzzle), [solves, mode, puzzle]);
   const modeSolvesRef = useRef(modeSolves);
   modeSolvesRef.current = modeSolves;
 
@@ -98,11 +105,12 @@ export function CubeLabApp() {
         id: crypto.randomUUID(),
         time: Math.round(ms),
         penalty,
-        scramble: scrambleRef.current.join(" "),
+        scramble: settingsRef.current.puzzle === "3x3x3" ? scrambleRef.current.join(" ") : otherScrambleRef.current,
         date: Date.now(),
         inspection: inspectionMs === null ? null : Math.round(inspectionMs),
         inspectionPenalty: inspectionMs === null ? undefined : penalty,
         mode,
+        puzzle: settingsRef.current.puzzle,
       };
       const shaved = pbShaved(bestSingle(modeSolvesRef.current), solve);
       if (shaved !== null) setPb(shaved);
@@ -137,7 +145,18 @@ export function CubeLabApp() {
   );
 
   const scrambling = useRef(false);
+  const otherScrambleRef = useRef("");
+  otherScrambleRef.current = otherScramble;
   async function newScramble() {
+    if (settingsRef.current.puzzle !== "3x3x3") {
+      const id = settingsRef.current.puzzle;
+      setOtherScramble("");
+      try {
+        const s = await puzzleScramble(id);
+        if (settingsRef.current.puzzle === id) setOtherScramble(s);
+      } catch { toast.error("Scramble unavailable offline for this puzzle yet"); }
+      return;
+    }
     if (!solverReady || scrambling.current) return;
     scrambling.current = true;
     try {
@@ -169,6 +188,15 @@ export function CubeLabApp() {
     timer.reset(); // cancels inspection or an unfinished solve without recording it
   }
 
+  // Picking a different puzzle loads its own scramble and records.
+  const firstPuzzle = useRef(true);
+  useEffect(() => {
+    if (firstPuzzle.current) { firstPuzzle.current = false; if (is333) return; }
+    timerRef.current.reset();
+    setPb(null);
+    newScrambleRef.current();
+  }, [puzzle]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Switching interfaces swaps the record set; any celebration belongs to the old one.
   useEffect(() => setPb(null), [mode]);
 
@@ -188,7 +216,7 @@ export function CubeLabApp() {
       }
       if (e.key === "?") return e.preventDefault(), setTutorial(true);
       if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.code)) return e.preventDefault();
-      if (settingsRef.current.timerOnly) return;
+      if (settingsRef.current.timerOnly || settingsRef.current.puzzle !== "3x3x3") return;
       const m = keyToMove(e, held, settingsRef.current.keys);
       if (!m) return;
       e.preventDefault();
@@ -243,7 +271,7 @@ export function CubeLabApp() {
           : settings.inspection ? "Hold timer or Space to inspect" : "Hold timer or Space to start";
 
   return (
-    <div className={`cubix-app fixed inset-0 flex flex-col overflow-hidden overscroll-none ${settings.timerOnly ? "timer-only" : "virtual-cube"}`}>
+    <div className={`cubix-app ${settings.focusMode && (t.phase === "running" || inspecting) ? "focus-mode" : ""} fixed inset-0 flex flex-col overflow-hidden overscroll-none ${settings.timerOnly ? "timer-only" : "virtual-cube"}`}>
       {splash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
           <span className="text-4xl font-bold tracking-tight">
@@ -252,10 +280,10 @@ export function CubeLabApp() {
         </div>
       )}
       <div className="mx-auto flex h-full w-full flex-col">
-        <AppHeader onSettings={() => setSettingsOpen(true)} timerOnly={settings.timerOnly} onMode={(timerOnly) => { timer.reset(); setPb(null); update({ timerOnly }); }} onRecords={() => { setRecordsView("history"); setRecordsOpen(true); }} onGraph={() => { setRecordsView("graph"); setRecordsOpen(true); }} onReset={reset} />
+        <AppHeader onSettings={() => setSettingsOpen(true)} timerOnly={settings.timerOnly} onMode={(timerOnly) => { timer.reset(); setPb(null); update({ timerOnly }); }} onRecords={() => { setRecordsView("history"); setRecordsOpen(true); }} onReset={reset} puzzleLabel={puzzleInfo(puzzle).label} onPuzzle={() => setPuzzleOpen(true)} />
 
         <div className="shrink-0">
-          <ScrambleDisplay scramble={scramble} loading={!solverReady} onNew={newScramble} />
+          <ScrambleDisplay scramble={is333 ? scramble : otherScramble} loading={is333 ? !solverReady : !otherScramble} onNew={newScramble} />
         </div>
 
         <Button
@@ -279,13 +307,24 @@ export function CubeLabApp() {
 
         <div className={`relative min-h-0 flex-1 items-center justify-center ${settings.timerOnly ? "hidden" : "flex"}`} style={{ containerType: "size" }}>
           <div className="aspect-square" style={{ width: "min(100cqw, 100cqh, 640px)" }}>
-            <Cube3D ref={cubeRef} settings={engineSettings} onUserMove={onUserMove} onReady={onCubeReady} />
+            <div className={is333 ? "h-full w-full" : "hidden"}>
+              <Cube3D ref={cubeRef} settings={engineSettings} onUserMove={onUserMove} onReady={onCubeReady} />
+            </div>
+            {!is333 && !settings.timerOnly && otherScramble && (
+              <PuzzlePlayer
+                ref={puzzleRef}
+                puzzle={puzzle}
+                scramble={otherScramble}
+                onTurn={() => { timerRef.current.startOnMove(); fb(); }}
+                onSolved={() => { if (timerRef.current.phase === "running") timerRef.current.stop(); }}
+              />
+            )}
           </div>
           <span className="pointer-events-none absolute top-1 left-4 font-mono text-xs text-muted-foreground" aria-live="polite">
             {lastMove ?? ""}
           </span>
           <div className="absolute right-3 bottom-2 flex flex-col gap-2">
-            <Button variant="pill" size="icon" aria-label="Recenter view" onClick={() => cubeRef.current?.recenter()}>
+            <Button variant="pill" size="icon" aria-label="Recenter view" onClick={() => (is333 ? cubeRef.current?.recenter() : puzzleRef.current?.recenter())}>
               <Crosshair className="size-4" />
             </Button>
             <Button variant="pill" size="icon" aria-label="Controls guide" onClick={() => setTutorial(true)}>
@@ -294,12 +333,12 @@ export function CubeLabApp() {
           </div>
         </div>
 
-        {settings.timerOnly && <TimerSummary solves={modeSolves} scramble={scramble} format={settings.timeFormat} />}
+        {settings.timerOnly && <TimerSummary solves={modeSolves} format={settings.timeFormat} />}
       </div>
 
       <Sheet open={recordsOpen} onOpenChange={setRecordsOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader><SheetTitle>Records — {settings.timerOnly ? "Timer only" : "Virtual cube"}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>Records — {puzzleInfo(puzzle).label}</SheetTitle></SheetHeader>
           <div className="flex flex-col gap-4 px-4 pb-6">
             <StatisticsPanel solves={modeSolves} format={settings.timeFormat} />
             <div className="flex gap-2" aria-label="Records view">
@@ -330,6 +369,20 @@ export function CubeLabApp() {
         onClearHistory={() => (setSolves((s) => s.filter((x) => (x.mode ?? "cube") !== mode)), setPb(null), toast.success("History cleared"))}
         onTutorial={() => (setSettingsOpen(false), setTutorial(true))}
       />
+
+      <Dialog open={puzzleOpen} onOpenChange={setPuzzleOpen}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Choose puzzle</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            {PUZZLES.map((p) => (
+              <Button key={p.id} variant={p.id === puzzle ? "secondary" : "ghost"} className="justify-start" onClick={() => { update({ puzzle: p.id as Puzzle }); setPuzzleOpen(false); }}>
+                {p.label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">Each puzzle keeps its own records, for both the timer and the virtual puzzle.</p>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={tutorial} onOpenChange={setTutorial}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto">

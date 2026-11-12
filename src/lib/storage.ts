@@ -1,6 +1,6 @@
 import { get, set } from "idb-keyval";
 import type { Solve } from "./stats";
-import type { Puzzle } from "./puzzles";
+import { PUZZLES, type Puzzle } from "./puzzles";
 import { DEFAULT_KEYS, type KeyBindings } from "@/components/cubelab/keyboard";
 
 export interface Settings {
@@ -9,6 +9,7 @@ export interface Settings {
   inspection: boolean;
   timerOnly: boolean;
   puzzle: Puzzle;
+  focusMode: boolean;
   holdToStart: boolean;
   timeFormat: "mm" | "ss";
   sound: boolean;
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   inspection: false,
   timerOnly: false,
   puzzle: "3x3x3",
+  focusMode: true,
   holdToStart: true,
   timeFormat: "mm",
   sound: true,
@@ -40,6 +42,7 @@ export async function loadSettings(): Promise<Settings> {
     const raw = { ...DEFAULT_SETTINGS, ...((await get("cubelab:settings")) ?? {}) } as Settings & { showMovePanel?: boolean };
     delete raw.showMovePanel;
     if (raw.controls !== "easy" && raw.controls !== "precise") raw.controls = "easy";
+    if (!PUZZLES.some((p) => p.id === raw.puzzle)) raw.puzzle = "3x3x3";
     raw.keys = { ...DEFAULT_KEYS, ...(raw.keys ?? {}) };
     return raw;
   } catch {

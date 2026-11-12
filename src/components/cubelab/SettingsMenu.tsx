@@ -135,6 +135,9 @@ export function SettingsMenu({ open, onOpenChange, settings: s, update, offline,
           <Row label="Timer only" hint="For a real cube: clock only, Space to start/stop">
             <Switch checked={s.timerOnly} onCheckedChange={(v) => update({ timerOnly: v })} />
           </Row>
+          <Row label="Focus mode" hint="While timing, show only the clock">
+            <Switch aria-label="Focus mode" checked={s.focusMode} onCheckedChange={(v) => update({ focusMode: v })} />
+          </Row>
           <Row label="15s inspection" hint="WCA: +2 from 15s, DNF from 17s">
             <Switch checked={s.inspection} onCheckedChange={(v) => update({ inspection: v })} />
           </Row>

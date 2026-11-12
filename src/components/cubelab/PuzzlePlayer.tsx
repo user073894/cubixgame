@@ -19,7 +19,8 @@ export const PuzzlePlayer = forwardRef<PuzzlePlayerHandle, {
     let cancelled = false;
     let current: TwistyPlayer | null = null;
     Promise.all([import("cubing/twisty"), import("cubing/puzzles")]).then(async ([{ TwistyPlayer }, { puzzles }]) => {
-      const kpuzzle = await puzzles[puzzle].kpuzzle();
+      const loader = puzzles[puzzle]; if (!loader) throw new Error("unknown puzzle");
+      const kpuzzle = await loader.kpuzzle();
       let pattern: KPattern = kpuzzle.defaultPattern().applyAlg(scramble);
       if (cancelled || !host.current) return;
       current = new TwistyPlayer({ puzzle, experimentalSetupAlg: scramble, background: "none", controlPanel: "none", viewerLink: "none", hintFacelets: "none", experimentalMovePressInput: "basic", tempoScale: 3 });

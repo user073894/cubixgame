@@ -1,7 +1,7 @@
 # cubix
-- [ ] Add digits-only focus mode, restore timer font, remove scramble net and simplify Records navigation.
+- [x] Add digits-only focus mode.
 - [ ] Reproduce and fix mobile cube centering.
-- [ ] Add puzzle selection from the cube-type label, including Pyraminx.
+- [x] Add puzzle selection from the cube-type label, including Pyraminx.
 - [ ] Research and prepare a grounded promotion plan; no external posting without approval.
 - [x] Match the supplied timer interface in black with cubix branding, preserving virtual-cube mode and existing controls.
 - [x] Fix the published page's missing cube constructor.
