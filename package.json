@@ -2,7 +2,11 @@
   "name": "tanstack_start_ts",
   "version": "1.1.26",
   "private": true,
-  "sideEffects": ["./src/vendor/cubejs/*.js", "**/*.css", "./src/lib/error-capture.ts"],
+  "sideEffects": [
+    "./src/vendor/cubejs/*.js",
+    "**/*.css",
+    "./src/lib/error-capture.ts"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -81,7 +85,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.26.5",
+    "@lovable.dev/vite-tanstack-config": "2.27.1",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.16.5",
